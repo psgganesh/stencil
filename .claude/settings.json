@@ -13,8 +13,6 @@
       "Bash(flutter pub upgrade:*)",
       "Bash(flutter pub outdated:*)",
       "Bash(flutter pub deps:*)",
-      "Bash(flutter pub add:*)",
-      "Bash(flutter pub remove:*)",
       "Bash(dart --version)",
       "Bash(dart analyze:*)",
       "Bash(dart format:*)",
@@ -27,7 +25,21 @@
     ],
     "deny": [
       "Bash(flutter pub publish:*)",
-      "Bash(dart pub publish:*)"
+      "Bash(dart pub publish:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(flutter pub remove:*)",
+      "Bash(dart pub add:*)",
+      "Bash(dart pub remove:*)",
+      "Edit(/lib/**)",
+      "Edit(/test/**)",
+      "Edit(/integration_test/**)",
+      "Edit(/pubspec.yaml)",
+      "Edit(/android/**)",
+      "Edit(/ios/**)",
+      "Edit(/macos/**)",
+      "Edit(/linux/**)",
+      "Edit(/windows/**)",
+      "Edit(/web/**)"
     ]
   },
   "enabledPlugins": {
