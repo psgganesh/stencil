@@ -7,7 +7,8 @@
     "**/.DS_Store": true,
     "**/Thumbs.db": true,
     ".dart_tool": true,
-    ".idea": true
+    ".idea": true,
+    ".vscode": true
   },
-  "hide-files.files": [".dart_tool", ".idea"]
+  "hide-files.files": [".dart_tool", ".idea", ".vscode"]
 }
