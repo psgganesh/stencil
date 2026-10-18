@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter --version)",
+      "Bash(flutter doctor:*)",
+      "Bash(flutter devices:*)",
+      "Bash(flutter analyze:*)",
+      "Bash(flutter test:*)",
+      "Bash(flutter run:*)",
+      "Bash(flutter build:*)",
+      "Bash(flutter clean)",
+      "Bash(flutter pub get:*)",
+      "Bash(flutter pub upgrade:*)",
+      "Bash(flutter pub outdated:*)",
+      "Bash(flutter pub deps:*)",
+      "Bash(flutter pub add:*)",
+      "Bash(flutter pub remove:*)",
+      "Bash(dart --version)",
+      "Bash(dart analyze:*)",
+      "Bash(dart format:*)",
+      "Bash(dart fix:*)",
+      "Bash(dart test:*)",
+      "Bash(dart pub get:*)",
+      "Bash(dart pub outdated:*)",
+      "Bash(dart pub deps:*)",
+      "Bash(dart run build_runner:*)"
+    ],
+    "deny": [
+      "Bash(flutter pub publish:*)",
+      "Bash(dart pub publish:*)"
+    ]
+  },
+  "enabledPlugins": {
+    "context-mode@context-mode": true
+  }
+}
