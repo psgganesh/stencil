@@ -1,0 +1,257 @@
+name: Flutter Local Build
+
+on:
+  push:
+    branches:
+      - main
+
+# Serialize release runs while allowing independent jobs within a run.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  GRADLE_OPTS: -Dorg.gradle.daemon=false
+
+jobs:
+  validate:
+    name: Validate and Extract Version
+    runs-on: [self-hosted, macOS]
+    outputs:
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Extract Version from pubspec.yaml
+        id: version
+        run: |
+          version_line=$(awk '/^version:/ {print $2; exit}' pubspec.yaml)
+          version_name=${version_line%+*}
+          version_code=${version_line##*+}
+          [[ "$version_name" != "$version_line" && "$version_code" =~ ^[0-9]+$ ]]
+          echo "version_name=$version_name" >> "$GITHUB_OUTPUT"
+          echo "version_code=$version_code" >> "$GITHUB_OUTPUT"
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Analyze Code
+        run: flutter analyze
+
+  check_play:
+    name: Check Google Play Version
+    needs: validate
+    runs-on: [self-hosted, macOS]
+    outputs:
+      skip_play_upload: ${{ steps.play.outputs.skip_play_upload }}
+    steps:
+      - name: Check if Version Already Exists on Google Play
+        id: play
+        run: |
+          pip3 install --quiet google-api-python-client google-auth
+          python3 <<'EOF'
+          import json, os
+          from googleapiclient.discovery import build
+          from google.oauth2 import service_account
+
+          PACKAGE_NAME = "au.com.devhustlers.catalyst"
+          TRACK = "internal"
+          LOCAL_VERSION_CODE = int(os.environ["APP_VERSION_CODE"])
+
+          info = json.loads(os.environ["GOOGLE_PLAY_SERVICE_ACCOUNT_JSON"])
+          creds = service_account.Credentials.from_service_account_info(
+              info, scopes=["https://www.googleapis.com/auth/androidpublisher"]
+          )
+          service = build("androidpublisher", "v3", credentials=creds)
+
+          edit_id = service.edits().insert(body={}, packageName=PACKAGE_NAME).execute()["id"]
+
+          track_info = service.edits().tracks().get(
+              editId=edit_id, track=TRACK, packageName=PACKAGE_NAME
+          ).execute()
+
+          existing_codes = []
+          for release in track_info.get("releases", []):
+              existing_codes.extend(int(c) for c in release.get("versionCodes", []))
+
+          service.edits().delete(editId=edit_id, packageName=PACKAGE_NAME).execute()
+
+          print(f"Existing version codes on '{TRACK}': {existing_codes}")
+          print(f"Local version code: {LOCAL_VERSION_CODE}")
+
+          skip = LOCAL_VERSION_CODE in existing_codes
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"skip_play_upload={'true' if skip else 'false'}\n")
+
+          print("Skipping Android build/upload — version already on Play." if skip
+                else "New version — proceeding with Android build/upload.")
+          EOF
+        env:
+          APP_VERSION_CODE: ${{ needs.validate.outputs.version_code }}
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+
+  build_web:
+    name: Build Web
+    needs: validate
+    # Web builds do not need the signing material on the self-hosted Mac.
+    # Keeping this on a GitHub-hosted runner prevents a busy/mobile build from
+    # starving the runner process and dropping its connection to GitHub.
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - name: Set Up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Build Web App (Release)
+        run: flutter build web --release --build-name=${{ needs.validate.outputs.version_name }} --build-number=${{ needs.validate.outputs.version_code }}
+      - name: Save Web Build
+        uses: actions/upload-artifact@v7
+        with:
+          name: web-release
+          path: build/web/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy_web:
+    name: Deploy Netlify
+    needs: build_web
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: web-release
+          path: build/web
+      - name: Verify Netlify Credentials
+        run: |
+          test -n "$NETLIFY_AUTH_TOKEN"
+          test -n "$NETLIFY_SITE_ID"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      - name: Deploy to Netlify
+        run: >-
+          npx --yes netlify-cli@27.12.1 deploy
+          --dir=build/web
+          --prod
+          --auth="$NETLIFY_AUTH_TOKEN"
+          --site="$NETLIFY_SITE_ID"
+          --message="GitHub Actions ${GITHUB_SHA}"
+        env:
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
+  build_android:
+    name: Build Android
+    needs: [validate, check_play]
+    if: needs.check_play.outputs.skip_play_upload != 'true'
+    runs-on: [self-hosted, macOS]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Stop Lingering Gradle Daemons
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew --stop || true
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Prepare Android Signing
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/upload-keystore.jks
+          cat > android/key.properties <<EOF
+          storePassword=$ANDROID_STORE_PASSWORD
+          keyPassword=$ANDROID_KEY_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          storeFile=upload-keystore.jks
+          EOF
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+      - name: Build Android App Bundle (Release)
+        run: flutter build appbundle --release --build-name=${{ needs.validate.outputs.version_name }} --build-number=${{ needs.validate.outputs.version_code }}
+      - name: Save Android Build
+        uses: actions/upload-artifact@v7
+        with:
+          name: android-release
+          path: build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 7
+      - name: Remove Temporary Signing Files
+        if: always()
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          for filename in ("android/app/upload-keystore.jks", "android/key.properties"):
+              Path(filename).unlink(missing_ok=True)
+          PY
+
+  deploy_android:
+    name: Upload Google Play
+    needs: build_android
+    runs-on: [self-hosted, macOS]
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: android-release
+          path: android-release
+      - name: Upload to Google Play (Internal & Closed Alpha)
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: au.com.devhustlers.catalyst
+          releaseFiles: android-release/app-release.aab
+          tracks: internal,alpha
+          status: completed
+
+  build_ios:
+    name: Build iOS
+    needs: validate
+    runs-on: [self-hosted, macOS]
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install Dependencies
+        run: flutter pub get
+      - name: Unlock macOS Keychain
+        run: |
+          security unlock-keychain -p "$MAC_KEYCHAIN_PASSWORD" "$HOME/Library/Keychains/login.keychain-db"
+          security set-keychain-settings -t 3600 -u "$HOME/Library/Keychains/login.keychain-db"
+        env:
+          MAC_KEYCHAIN_PASSWORD: ${{ secrets.MAC_KEYCHAIN_PASSWORD }}
+      - name: Build iOS IPA (Release)
+        run: flutter build ipa --release --build-name=${{ needs.validate.outputs.version_name }} --build-number=${{ needs.validate.outputs.version_code }}
+      - name: Save iOS Build
+        uses: actions/upload-artifact@v7
+        with:
+          name: ios-release
+          path: build/ios/ipa/*.ipa
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy_ios:
+    name: Upload App Store Connect
+    needs: build_ios
+    runs-on: [self-hosted, macOS]
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ios-release
+          path: ios-release
+      - name: Upload to App Store Connect
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$APPSTORE_API_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8"
+          xcrun altool --upload-app \
+            -f ios-release/Catalyst.ipa \
+            -t ios \
+            --apiKey "$APPSTORE_API_KEY_ID" \
+            --apiIssuer "$APPSTORE_ISSUER_ID"
+        env:
+          APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+          APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+          APPSTORE_ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
