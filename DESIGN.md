@@ -120,6 +120,14 @@ Button label: Label large (14 / 500 / 0.1), icon gap 8.
 - **Top tabs / web top-bar links:** 44 tall, radius 22, 0 18 padding; active link gets the Nav-indicator pill.
 - **FAB (extended):** 56 tall, radius **16**, 0 20 padding, Primary container fill, icon + label, shadow `0 2 8 rgba(0,0,0,.2)`.
 
+### Layouts
+Decided in `.scratch/stencil-v1/issues/03-device-layouts.md` (sketch: `.scratch/stencil-v1/prototypes/device-layouts.md`).
+- **Shells:** mobile has a top bar plus a bottom navigation bar. Tablet and desktop have the rail (logo mark at the top, avatar at the bottom). Web has a top bar (logo and app name, pill links, search, language button, avatar). The avatar opens Settings.
+- **Content width:** desktop and web cap content at 1120, centred. Tablet and mobile fill the width.
+- **Items on desktop and web** is always a list (~360) + detail split, unlike the designs' table. With nothing selected, the detail pane shows a "Select an item" State layout with no buttons.
+- **Onboarding:** mobile and tablet show an illustration band with a rounded sheet over it and a full-width CTA. Desktop and web are a split screen: a hero panel (~480, Primary container) and a form column (~560), with the CTA bottom-right.
+- **Design slips:** wide Item detail shows its name once (not twice), and tablet's header has a search icon like the other layouts.
+
 ### Brand and imagery
 - **Logo mark:** 36 px Accent-fill circle with a 14 px Primary dot centred; "App name" beside it at 22 / 500, 12 px gap.
 - **Image placeholder:** Surface container block with a mountain-and-sun illustration (two blues, Accent-fill sun), radius 20–24, with a small "Image placeholder" caption tag in the bottom-left corner.

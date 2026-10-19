@@ -19,3 +19,5 @@ Also decide:
 - **Activity history:** stored as a subcollection or as an array?
 - **Delete account:** what does it delete?
 - **Security rules:** the outline, so Codex can write `firestore.rules`.
+
+> Context from [Device layouts](03-device-layouts.md): every Items design shows an **Archived** status chip and filter, but `GLOSSARY.md` says an item is Active or Draft. Decide whether `status` includes Archived, and update the glossary.
