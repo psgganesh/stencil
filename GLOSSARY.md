@@ -16,6 +16,10 @@ _Avoid_: main app, application, web app, App
 A person who has signed in to the app. There is one user per email address, whether they sign in with a password, Google or Apple.
 _Avoid_: account, member, profile (when meaning the person)
 
+**onboarding**:
+The flow a new user goes through once, in this order: Welcome (native only), Language, SignIn, Profile, Preferences, Permissions, Done. Its **steps** are Language through Permissions, labelled "Step 1 of 5" to "Step 5 of 5". It is **finished** when the user taps Done.
+_Avoid_: signup flow, setup wizard, tutorial
+
 **item**:
 The sample record the app is built around (a name, a status of Active or Draft, an owner, a category, dates and an activity history). A real product renames or replaces it.
 _Avoid_: entry, record, entity

@@ -94,7 +94,13 @@ The architecture below is decided but not built yet. Follow it as tickets land, 
   - Use `SharedPreferencesWithCache`, created in `main()` and injected with a provider override. Tests use `InMemorySharedPreferencesAsync`.
 - **Package versions and minimum platforms:** `flutter_riverpod ^3.4.3`, `firebase_core ^5.0.0`, `firebase_auth ^7.0.0`, `cloud_firestore ^7.0.0`, `shared_preferences ^2.5.6`. Android minSdk is 24 and macOS is 11. If the new Firebase versions cause problems, fall back to 4.15 / 6.7 / 6.10 and record that here.
 - **Widgets inside a screen** get their values and callbacks from the screen; they don't read providers. The exceptions are a few small app-wide widgets, such as the language button and the avatar.
-- **Routing:** `MaterialApp` named routes, with no routing package. `onGenerateRoute` checks the session and sends a signed-out user who asks for `/app` to `/login`. Onboarding's own view model makes sure the steps after SignIn are only reachable once the user is signed in.
+- **Routing:** `MaterialApp` named routes, with no routing package. Onboarding is one flow in one view model, and its steps are view model state, not routes. `/onboarding` shows the flow from the saved step. `/signup` opens the same flow at Language, with SignIn in signup mode. `/login` is SignIn on its own, in login mode, with no step progress. `/onboarding` has no route guard: its view model sends a signed-out user on any step after SignIn back to SignIn. `onGenerateRoute` checks the session and onboarding status, and redirects:
+  - signed out and asking for `/app` → `/login`;
+  - signed in, not onboarded, and asking for `/app`, `/login` or `/signup` → `/onboarding`;
+  - onboarded and asking for `/login`, `/signup` or `/onboarding` → `/app`;
+  - on web, signed out with no saved step and asking for `/onboarding` → `/signup`. Welcome is native-only.
+
+  The full tables are in `.scratch/stencil-v1/issues/02-login-signup-onboarding-routes.md`.
 - **Folder layout:** `lib/features/<feature>/{data,view_model,view}/` for each feature, and `lib/core/` for shared pieces (theme, routing, app-wide providers, shared widgets). Tests mirror this layout under `test/`.
 
 ## Commands
