@@ -21,12 +21,16 @@ The flow a new user goes through once, in this order: Welcome (native only), Lan
 _Avoid_: signup flow, setup wizard, tutorial
 
 **item**:
-The sample record the app is built around (a name, a status of Active or Draft, an owner, a category, dates and an activity history). A real product renames or replaces it.
+The sample record the app is built around (a name, a summary, a description, a status of Active, Draft or Archived, an owner, a category, dates and an activity history). Each user's items are their own; nothing is shared between users. A real product renames or replaces it.
 _Avoid_: entry, record, entity
 
 **alert**:
-A message shown to the signed-in user in the app's Alerts feed.
+A message shown to the signed-in user in the app's Alerts feed. Alerts are either welcome messages given when onboarding is finished, or raised when one of the user's items changes status. Each alert is unread until the user reads it.
 _Avoid_: notification (when meaning the feed), inbox item
+
+**role**:
+The user's answer to "What best describes you?" in the onboarding Profile step.
+_Avoid_: persona, user type, use case
 
 **notification**:
 A delivery channel that sends alerts outside the app (push or email), along with the user's settings for it.

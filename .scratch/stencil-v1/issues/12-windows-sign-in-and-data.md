@@ -13,3 +13,5 @@ According to [Firebase support on each platform](05-firebase-platform-support.md
 - **Permissions and notifications:** what do the Permissions step and the notification toggles do on Windows?
 
 Then decide how much of that also applies to macOS, which has beta status.
+
+> Context from [Firestore data model and security rules](08-firestore-data-model.md): v1 builds only the fake repositories, and Firestore is a later effort. So the **Data** question is about which repositories Windows uses once Firestore arrives, not in v1.
