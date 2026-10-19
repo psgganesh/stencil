@@ -45,6 +45,8 @@ Material 3 structure, a blue and orange palette, Roboto type, light and dark the
 
 **Note — primary stays `#00639B` in dark mode.** Filled buttons keep the same blue with white text in both themes. The lighter dark-mode blue (`#96CCFF`) is used only for "Selected and link". This deviates from a generated Material 3 dark scheme, so set the scheme explicitly rather than from a seed color, and carry the *custom* roles in a theme extension.
 
+**Exception, for accessibility:** in dark mode, a filled button placed **on a Primary container surface** (such as the Featured card) uses the Selected-and-link fill `#96CCFF` with On primary container `#001D32` text. The normal `#00639B` fill measures only 1.44:1 against `#004B76`; this pairing gives 5.46:1 and meets WCAG's 3:1 rule for control boundaries.
+
 ## Typography
 
 Roboto, with Noto Sans fallbacks for Devanagari, Bengali, Tamil, Telugu, Gujarati, Kannada, Malayalam and Gurmukhi (the onboarding languages). Values are size / line height in px, tracking in px, weight. The scale matches the Material 3 default type scale.
@@ -160,6 +162,8 @@ Ten onboarding languages, each shown by its native name with the English name be
 | States (`states/`) | mobile, tablet, desktop, web | Empty, Error, Loading, Offline |
 
 Every screen exists in `light/` and `dark/`.
+
+The Permissions screen shows Notifications, Location and Camera cards, but v1 ships only the **Notifications** card. The card is a reusable pattern (icon circle, title, reason, action), so an app built from the boilerplate can add Location or Camera when it actually uses them.
 
 ## States
 
