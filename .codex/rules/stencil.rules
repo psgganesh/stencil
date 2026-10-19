@@ -1,0 +1,54 @@
+# Commands Codex may run outside the sandbox without prompting while implementing tickets.
+# Flutter writes to the SDK cache and ~/.pub-cache, and git writes to .git — all outside
+# the workspace-write sandbox — so these are allowed explicitly.
+
+prefix_rule(
+    pattern = ["flutter", ["analyze", "test", "doctor", "devices", "clean", "--version"]],
+    decision = "allow",
+    justification = "Verification commands from AGENTS.md",
+    match = ["flutter analyze", "flutter test test/foo_test.dart"],
+)
+
+prefix_rule(
+    pattern = ["flutter", "pub", ["get", "outdated", "deps"]],
+    decision = "allow",
+    justification = "Resolve dependencies",
+)
+
+prefix_rule(
+    pattern = ["dart", ["format", "analyze", "fix", "test", "--version"]],
+    decision = "allow",
+    justification = "Formatting and analysis from AGENTS.md",
+    match = ["dart format .", "dart fix --apply"],
+)
+
+prefix_rule(
+    pattern = ["dart", "run", "build_runner"],
+    decision = "allow",
+    justification = "Code generation",
+)
+
+prefix_rule(
+    pattern = ["git", ["status", "diff", "log", "add", "commit", "show"]],
+    decision = "allow",
+    justification = "One commit per ticket, per AGENTS.md",
+    match = ["git commit -m \"01: Add login screen\"", "git add -A"],
+)
+
+prefix_rule(
+    pattern = [["flutter", "dart"], "pub", ["add", "remove"]],
+    decision = "prompt",
+    justification = "Adding or removing a dependency needs a human OK",
+)
+
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "forbidden",
+    justification = "The human reviews and pushes; don't push.",
+)
+
+prefix_rule(
+    pattern = [["flutter", "dart"], "pub", "publish"],
+    decision = "forbidden",
+    justification = "This package is not published (publish_to: none).",
+)
