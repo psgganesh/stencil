@@ -74,7 +74,28 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 
 `stencil` is a freshly scaffolded Flutter app (stable channel, Dart SDK `^3.13.4`). It is currently the minimal "empty" template: `lib/main.dart` contains a single `MainApp` (`MaterialApp` → `Scaffold` → "Hello World!") and there are no third-party dependencies beyond `flutter_lints`. There is no `test/` directory yet. Platform folders exist for android, ios, web, macos, linux and windows.
 
-Since there is no established architecture yet, any structure introduced (routing, state management, folder layout under `lib/`) sets the convention — keep it consistent once chosen and update this file.
+The architecture below is decided but not built yet. Follow it as tickets land, and keep this file up to date when a ticket changes a convention. Domain terms are in `GLOSSARY.md`; colors, type and components are in `DESIGN.md`.
+
+## Architecture
+
+- **MVVM with Riverpod only.** No other state-management library, and no code generation: write providers by hand, and write state classes as plain immutable classes with `copyWith` (no `riverpod_generator`, no `freezed`).
+- **Layers:** a View (a widget that watches its view model) → a ViewModel (a Riverpod notifier; async data is held as `AsyncValue`) → a Repository (an abstract interface) → a data source. Each layer only talks to the one beneath it.
+- **Repositories have two implementations:** an in-memory fake, used by default, and a Firestore version that is used only when the Firebase config is present. The choice is made once, at startup, with provider overrides, and tests override providers the same way. The app and its tests have to run without a Firebase project.
+- **Where state lives:**
+  - **App-wide:** shared notifiers for the session, theme mode, language and whether onboarding is finished. Theme mode, language and onboarding progress are saved with `shared_preferences`.
+  - **Per screen:** one view model per screen. Each device layout (mobile, tablet, desktop, web) is chosen from the screen width and reads that same view model.
+  - **Per flow:** onboarding has one view model covering every step. Answers stay in memory until Done; the current step is saved so the flow can resume.
+  - **Widget UI state** (selected tab, expanded section, a toggle not yet saved) goes in small `autoDispose` Riverpod providers. Only Flutter controller objects (`TextEditingController`, `FocusNode`, `AnimationController`, scroll controllers) live in a `StatefulWidget`, because Riverpod can't own their lifecycle without hooks. Don't add `flutter_hooks`.
+- **Riverpod 3 details:**
+  - Turn automatic retry off on the root `ProviderScope` and in every test container (`retry: (_, _) => null`). Each repository decides for itself whether to retry.
+  - Per-screen view models and widget-state providers are `isAutoDispose: true`. The session, theme, language, repositories and the onboarding view model stay alive.
+  - Every state class implements `==` and `hashCode` (with `Object.hash`).
+  - Don't use `legacy.dart` providers (`StateProvider`, `StateNotifierProvider`, `ChangeNotifierProvider`).
+  - Use `SharedPreferencesWithCache`, created in `main()` and injected with a provider override. Tests use `InMemorySharedPreferencesAsync`.
+- **Package versions and minimum platforms:** `flutter_riverpod ^3.4.3`, `firebase_core ^5.0.0`, `firebase_auth ^7.0.0`, `cloud_firestore ^7.0.0`, `shared_preferences ^2.5.6`. Android minSdk is 24 and macOS is 11. If the new Firebase versions cause problems, fall back to 4.15 / 6.7 / 6.10 and record that here.
+- **Widgets inside a screen** get their values and callbacks from the screen; they don't read providers. The exceptions are a few small app-wide widgets, such as the language button and the avatar.
+- **Routing:** `MaterialApp` named routes, with no routing package. `onGenerateRoute` checks the session and sends a signed-out user who asks for `/app` to `/login`. Onboarding's own view model makes sure the steps after SignIn are only reachable once the user is signed in.
+- **Folder layout:** `lib/features/<feature>/{data,view_model,view}/` for each feature, and `lib/core/` for shared pieces (theme, routing, app-wide providers, shared widgets). Tests mirror this layout under `test/`.
 
 ## Commands
 

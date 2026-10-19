@@ -1,6 +1,6 @@
 # DESIGN
 
-Design system for the App and the Marketing site. Generated from `.refs/design/DESIGN.html` ("App name starter kit", UI skeleton v1.0); screen designs live as PNGs under `.refs/design/<device>/<flow>/<light|dark>/`.
+Design system for the app and marketing (see `GLOSSARY.md`). Generated from `.refs/design/DESIGN.html` ("App name starter kit", UI skeleton v1.0); screen designs live as PNGs under `.refs/design/<device>/<flow>/<light|dark>/`.
 
 Material 3 structure, a blue and orange palette, Roboto type, light and dark themes, and onboarding in ten languages. Use Material components throughout; this file only says how to configure them.
 
@@ -146,9 +146,26 @@ Ten onboarding languages, each shown by its native name with the English name be
 
 | Flow | Devices | Screens |
 |---|---|---|
-| Onboarding | mobile, tablet, desktop, web | Welcome, Language, SignIn, Profile, Preferences, Permissions, Done |
-| Marketing (web only) | web | Home, Features, What's new, About Us, Articles, Premium, Reviews, Press, Support & FAQ, Terms & Conditions, Privacy Policy, Changelog, Contact Us |
+| Onboarding (`onboarding/`) | mobile, tablet, desktop, web | Welcome, Language, SignIn, Profile, Preferences, Permissions, Done |
+| app (`app/`) | mobile, tablet, desktop, web | Home, Items, Item detail, Notifications, Settings |
+| marketing (`marketing/`) | web | Home, Features, What's new, About Us, Articles, Premium, Reviews, Press, Support & FAQ, Terms & Conditions, Privacy Policy, Changelog, Contact Us |
+| States (`states/`) | mobile, tablet, desktop, web | Empty, Error, Loading, Offline |
 
 Every screen exists in `light/` and `dark/`.
 
-The design kit's overview also names **App screens** (home, items, detail, settings, alerts) and **States** (empty, offline, error, loading), but no designs for those are included in `.refs/design` yet. The component styles above (list rows, bottom nav, rail, FAB, skeleton) are the building blocks for them.
+## States
+
+A state replaces only a screen's **content area**. The app bar (or the web top bar) and the navigation stay in place, and the screen title stays visible. Empty, Error and Offline share one centred layout:
+
+1. an icon in a large tinted circle (about 128 px);
+2. a title;
+3. a Body large explanation (On surface variant), centred;
+4. buttons: a filled one, plus an outlined one for Empty and Error.
+
+| State | Circle fill / icon | Title | Body | Buttons (filled · outlined) |
+|---|---|---|---|---|
+| Empty | Primary container / inbox, On primary container | "Nothing here yet" | Explains what the space is for and how to add the first one | "+ Add your first item" · "Learn more" |
+| Error | Error container / warning triangle, On error container | "Something went wrong" | "We couldn't load this page. Try again, or contact support if it keeps happening." Then a Body small line: "Error code: [CODE]" | "↻ Try again" · "Contact support" |
+| Offline | Surface container / wifi-off, On surface | "You're offline" | "Check your connection and try again. Changes you make will sync when you're back online." | "↻ Try again" only. The design's "View saved items" button is deliberately dropped. |
+
+**Loading** uses no circle. It shows skeleton blocks in the shape of the screen's real content, as described under Skeleton loader above: a title bar, a row of three metric tiles, and an outlined card with six list-row skeletons (circle, two text lines, chip). A 4 px linear progress bar (Selected-and-link fill on Track) runs across the top of the content.
