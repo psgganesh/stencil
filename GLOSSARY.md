@@ -12,6 +12,10 @@ _Avoid_: website, landing site, web (ambiguous), Marketing site
 The product itself, on every platform: onboarding, sign-in and the signed-in screens.
 _Avoid_: main app, application, web app, App
 
+**user**:
+A person who has signed in to the app. There is one user per email address, whether they sign in with a password, Google or Apple.
+_Avoid_: account, member, profile (when meaning the person)
+
 **item**:
 The sample record the app is built around (a name, a status of Active or Draft, an owner, a category, dates and an activity history). A real product renames or replaces it.
 _Avoid_: entry, record, entity

@@ -22,6 +22,7 @@ The sketch should also cover:
 - what the back button does on each screen;
 - where a signed-in user who opens `/login` or `/signup` ends up;
 - where a signed-in user who hasn't finished onboarding and opens `/app` ends up;
-- what happens on web compared with native.
+- what happens on web compared with native;
+- the SignIn password state from [Real email sign-in flow](01-real-email-sign-in-flow.md). It is a sub-state of SignIn, not a route, and its "New here? Create an account" and "Sign in instead" links move the user between `/login` and `/signup`.
 
 Fix the "Routing" line in `AGENTS.md` → "Architecture" to match the result.
