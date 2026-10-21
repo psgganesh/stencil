@@ -1,17 +1,23 @@
-import 'package:flutter/material.dart';
-import 'package:stencil/core/app_identity.dart';
+import 'package:flutter/widgets.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:stencil/app.dart';
+import 'package:stencil/core/preferences/shared_preferences_provider.dart';
+import 'package:stencil/core/theme/theme_mode_notifier.dart';
 
-void main() {
-  runApp(const MainApp());
-}
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final preferences = await SharedPreferencesWithCache.create(
+    cacheOptions: const SharedPreferencesWithCacheOptions(
+      allowList: {themeModePreferenceKey},
+    ),
+  );
 
-class MainApp extends StatelessWidget {
-  const MainApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const MaterialApp(
-      home: Scaffold(body: Center(child: Text(AppIdentity.appName))),
-    );
-  }
+  runApp(
+    ProviderScope(
+      retry: (_, _) => null,
+      overrides: [sharedPreferencesProvider.overrideWithValue(preferences)],
+      child: const MainApp(),
+    ),
+  );
 }
