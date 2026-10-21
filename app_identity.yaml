@@ -1,0 +1,6 @@
+app_name: Stencil
+app_id: com.example.stencil
+artifact_name: stencil
+msstore_identity_name: 00000Example.Stencil
+msstore_publisher: CN=00000000-0000-0000-0000-000000000000
+msstore_publisher_display_name: Example Publisher

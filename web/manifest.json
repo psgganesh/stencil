@@ -1,6 +1,6 @@
 {
-    "name": "stencil",
-    "short_name": "stencil",
+    "name": "Stencil",
+    "short_name": "Stencil",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
